@@ -4,10 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>EcoHuerta — Sustainable Crops & Learning</title>
+    <title>EcoNatural — Sustainable Crops & Learning</title>
     <meta
       name="description"
-      content="EcoHuerta: learn sustainable crops, seasons, and best practices. Built with Tailwind CSS v4 (CDN) to demonstrate utility-first."
+      content="EcoNatural: learn sustainable crops, seasons, and best practices. Built with Tailwind CSS v4 (CDN) to demonstrate utility-first."
     />
 
     <!-- Tailwind v4 Play CDN (official) -->
@@ -167,7 +167,7 @@
           >
             <i class="fa-solid fa-seedling" aria-hidden="true"></i>
           </span>
-          <span class="text-lg font-semibold">EcoHuerta</span>
+          <span class="text-lg font-semibold">EcoNatural</span>
         </a>
 
         <button
@@ -265,11 +265,59 @@
       </div>
 
       <div
-        class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 gap-6"
+        class="mt-6 flex flex-wrap gap-2"
+        role="group"
+        aria-label="Filter crops by stage"
+      >
+        <button
+          class="btn btn-primary rounded-full"
+          type="button"
+          data-crop-filter="all"
+          aria-pressed="true"
+        >
+          All
+        </button>
+        <button
+          class="btn btn-ghost rounded-full border border-eco-600"
+          type="button"
+          data-crop-filter="seed"
+          aria-pressed="false"
+        >
+          Seed
+        </button>
+        <button
+          class="btn btn-ghost rounded-full border border-eco-600"
+          type="button"
+          data-crop-filter="grow"
+          aria-pressed="false"
+        >
+          Grow
+        </button>
+        <button
+          class="btn btn-ghost rounded-full border border-eco-600"
+          type="button"
+          data-crop-filter="harvest"
+          aria-pressed="false"
+        >
+          Harvest
+        </button>
+      </div>
+      <p
+        id="cropResultsCount"
+        class="mt-3 text-sm text-ink-weak"
+        role="status"
+        aria-live="polite"
+      >
+        Showing 6 of 6 crops
+      </p>
+
+      <div
+        id="cropGrid"
+        class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 gap-6"
       >
         <!-- Reusable crop card -->
         <!-- Tomato -->
-        <article class="card card-hover">
+        <article class="card card-hover" data-stage="harvest">
           <img
             src="https://images.unsplash.com/photo-1561136594-7f68413baa99?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470"
             alt="Fresh tomatoes"
@@ -290,7 +338,7 @@
         </article>
 
         <!-- Lettuce -->
-        <article class="card card-hover">
+        <article class="card card-hover" data-stage="grow">
           <img
             src="https://images.unsplash.com/photo-1519897831810-a9a01aceccd1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1331"
             alt="Crisp lettuce"
@@ -310,7 +358,7 @@
         </article>
 
         <!-- Carrot -->
-        <article class="card card-hover">
+        <article class="card card-hover" data-stage="seed">
           <img
             src="https://images.unsplash.com/photo-1633380110125-f6e685676160?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1471"
             alt="Carrots on soil"
@@ -332,7 +380,7 @@
         </article>
 
         <!-- Potato -->
-        <article class="card card-hover">
+        <article class="card card-hover" data-stage="grow">
           <img
             src="https://images.unsplash.com/photo-1561635741-c416a5193b6e?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470"
             alt="Potatoes in a basket"
@@ -354,7 +402,7 @@
         </article>
 
         <!-- Corn -->
-        <article class="card card-hover">
+        <article class="card card-hover" data-stage="seed">
           <img
             src="https://images.unsplash.com/photo-1634467524884-897d0af5e104?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470"
             alt="Corn field"
@@ -376,7 +424,7 @@
         </article>
 
         <!-- Strawberry -->
-        <article class="card card-hover">
+        <article class="card card-hover" data-stage="harvest">
           <img
             src="https://images.unsplash.com/photo-1464965911861-746a04b4bca6?q=80&w=1200&auto=format&fit=crop"
             alt="Strawberries"
@@ -666,6 +714,34 @@
 
       // Current year in footer
       document.getElementById("year").textContent = new Date().getFullYear();
+
+      // Crop stage filters
+      const cropFilters = document.querySelectorAll("[data-crop-filter]");
+      const cropCards = document.querySelectorAll("#cropGrid [data-stage]");
+      const cropResultsCount = document.getElementById("cropResultsCount");
+
+      cropFilters.forEach((filterButton) => {
+        filterButton.addEventListener("click", () => {
+          const selectedStage = filterButton.dataset.cropFilter;
+          let visibleCount = 0;
+
+          cropFilters.forEach((button) => {
+            const isSelected = button === filterButton;
+            button.setAttribute("aria-pressed", String(isSelected));
+            button.classList.toggle("btn-primary", isSelected);
+            button.classList.toggle("btn-ghost", !isSelected);
+          });
+
+          cropCards.forEach((crop) => {
+            const isVisible =
+              selectedStage === "all" || crop.dataset.stage === selectedStage;
+            crop.hidden = !isVisible;
+            if (isVisible) visibleCount += 1;
+          });
+
+          cropResultsCount.textContent = `Showing ${visibleCount} of ${cropCards.length} crops`;
+        });
+      });
     </script>
   </body>
 </html>
